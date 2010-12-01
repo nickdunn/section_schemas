@@ -1,7 +1,7 @@
 <?php
 
 	// Required for some third party fields
-	// require_once(CORE . '/class.administration.php');
+	require_once(CORE . '/class.administration.php');
 	
 	Class extension_Section_Schemas extends Extension{
 
@@ -9,8 +9,8 @@
 
 		public function about(){
 			return array('name' => 'Section Schemas',
-						 'version' => '1.5',
-						 'release-date' => '2010-11-01',
+						 'version' => '1.4',
+						 'release-date' => '2010-01-05',
 						 'author' => array('name' => 'Nick Dunn',
 										   'website' => 'http://nick-dunn.co.uk',
 										   'email' => 'nick.dunn@airlock.com')
@@ -29,8 +29,8 @@
 		
 		public function getSectionSchema(&$result, $section_id) {
 		
-			$entryManager = new EntryManager(Frontend::instance());
-			$sm = new SectionManager(Frontend::instance());
+			$entryManager = new EntryManager($this->_Parent);
+			$sm = new SectionManager($this->_Parent);
 			
 			// retrieve this section
 		  	$section = $sm->fetch($section_id);
@@ -38,7 +38,7 @@
 			$result->setAttribute('id', $section_id);
 			$result->setAttribute('handle', $section->_data['handle']);
 			
-			$entry_count = intval(Frontend::instance()->Database->fetchVar('count', 0, "SELECT count(*) AS `count` FROM `tbl_entries` WHERE `section_id` = '".$section_id."' "));
+			$entry_count = intval($this->_Parent->Database->fetchVar('count', 0, "SELECT count(*) AS `count` FROM `tbl_entries` WHERE `section_id` = '".$section_id."' "));
 			$result->setAttribute('total-entries', $entry_count);
 			
 			// instantiate a dummy entry to instantiate fields and default values
@@ -73,13 +73,18 @@
 					}					
 				}
 				
-				// check that we can safely inspect output of displayPublishPanel (some custom fields do not work)
-				if (!in_array($field['type'], $this->incompatible_publishpanel)) {
-					
+				// Allow a field to define its own schema:
+				if (method_exists($section_field, 'appendFieldSchema')) {
+					$section_field->appendFieldSchema($f);
+				}
+
+				// Check that we can safely inspect output of displayPublishPanel (some custom fields do not work)
+				// This should be removed when more fields support the new method.
+				else if (!in_array($field['type'], $this->incompatible_publishpanel)) {
 					// grab the HTML used in the Publish entry form
 					$html = new XMLElement('html');
 					$section_field->displayPublishPanel($html);
-
+					
 					$dom = new DomDocument();
 					$dom->loadXML($html->generate());
 
@@ -119,7 +124,7 @@
 						$f->appendChild(new XMLElement('initial-value', $single_input_value->getAttribute('value')));
 					}
 				}
-								
+				
 				$result->appendChild($f);
 			}
 			
@@ -144,7 +149,7 @@
 			
 			// generate counts for tags
 			if ($field['type'] == 'taglist') {
-				$total = Frontend::instance()->Database->fetchCol('count', sprintf('SELECT COUNT(handle) AS count FROM sym_entries_data_%s WHERE handle="%s"', $field['id'], $handle));
+				$total = $this->_Parent->Database->fetchCol('count', sprintf('SELECT COUNT(handle) AS count FROM sym_entries_data_%s WHERE handle="%s"', $field['id'], $handle));
 				$option_element->setAttribute('count', $total[0]);
 			}
 
