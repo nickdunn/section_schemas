@@ -235,14 +235,14 @@
 		}
 
 		function __appendOption($option, &$container, $field) {
-			$option_element = new XMLElement('option', $this->__replaceAmpersands($option->nodeValue));
+			$option_element = new XMLElement('option', htmlspecialchars($option->nodeValue));
 
 			if (strlen($option->nodeValue) == 0) return;
 
 			$handle = Lang::createHandle($option->nodeValue);
 
 			if ($option->getAttribute('value')) {
-				$option_element->setAttribute('value', $option->getAttribute('value'));
+				$option_element->setAttribute('value', htmlspecialchars($option->getAttribute('value')));
 			}
 
 			// add handles to option elements
@@ -259,9 +259,6 @@
 			$container->appendChild($option_element);
 		}
 		
-		private function __replaceAmpersands($value) {
-                return preg_replace('/&(?!(#[0-9]+|#x[0-9a-f]+|amp|lt|gt);)/i', '&amp;', trim($value));
-        }
 	}
 
 	return 'SectionSchemaDatasource';
