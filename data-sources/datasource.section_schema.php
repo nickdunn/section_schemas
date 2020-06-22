@@ -116,7 +116,7 @@
 			return sprintf($template,
 				$params['rootelement'],
 				$settings[self::getClass()]['section'],
-				count($settings[self::getClass()]['fields'] > 0) ? "'" . implode("','", $settings[self::getClass()]['fields']) . "'" : ''
+				(count($settings[self::getClass()]['fields']) > 0) ? "'" . implode("','", $settings[self::getClass()]['fields']) . "'" : ''
 			);
 		}
 
